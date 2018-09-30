@@ -32,7 +32,7 @@ def first_query(dbname):
     first_query = """SELECT articles.title, count(*) as views
                      FROM articles, log
                      WHERE log.path = CONCAT('/article/', articles.slug)
-                            AND log.status LIKE '%2%'
+                            AND log.status LIKE '%200%'
                      GROUP BY articles.title
                      ORDER BY views DESC
                      LIMIT 3;"""
@@ -52,10 +52,23 @@ def second_query(dbname):
     """Queries the PostgreSQL database and answers the following question:
             'Who are the most popular article authors of all time?'
     """
-    second_query = """
+    second_query = """SELECT authors.name, count(*) as views
+                      FROM authors, articles, log
+                      WHERE authors.id = articles.author
+                            AND log.path = CONCAT('/article/', articles.slug)
+                            AND log.status LIKE '%200%'
+                      GROUP BY authors.name
+                      ORDER BY views DESC;
                    """
-def print_second_query():
-    pass
+    result = query_database(dbname=dbname, query=second_query)
+    print_second_query(result=result)
+
+def print_second_query(result):
+    print_border()
+    print("Most popular article authors:\n")
+    for (author, views) in result:
+        print("\"" + str(author) + "\"" + " -- " + str(views) + " views")
+    print_border()
 
 def third_query(dbname):
     """Queries the PostgreSQL database and answers the following question:
@@ -63,7 +76,7 @@ def third_query(dbname):
     """
     third_query = """
                   """
-def print_third_query():
+def print_third_query(result):
     pass
 
 if __name__ == "__main__":
