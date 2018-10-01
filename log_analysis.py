@@ -67,17 +67,46 @@ def print_second_query(result):
     print_border()
     print("Most popular article authors:\n")
     for (author, views) in result:
-        print("\"" + str(author) + "\"" + " -- " + str(views) + " views")
+        print(str(author) + " -- " + str(views) + " views")
     print_border()
 
 def third_query(dbname):
     """Queries the PostgreSQL database and answers the following question:
             On which days did more than 1% of requests lead to errors?
     """
-    third_query = """
-                  """
+    third_query = """WITH totaltimelogs AS (
+                     SELECT DATE(time) as date, count(*) as num_total_logs
+                     FROM log
+                     GROUP BY date
+                  ),                
+                 errortimelogs AS (
+                     SELECT DATE(time) as date, count(*) as num_error_logs
+                     FROM log
+                     WHERE status LIKE'%4%' OR status LIKE'%5%'
+                     GROUP BY date	
+                 ),                
+                 errorpercentages AS (
+                     SELECT DATE(errortimelogs.date) as date ,
+                     ROUND(((errortimelogs.num_error_logs::float / totaltimelogs.num_total_logs::float)::numeric * 100), 2)
+                           AS error_perc
+                     FROM totaltimelogs, errortimelogs
+                     WHERE totaltimelogs.date = errortimelogs.date
+                 )                
+                 SELECT TO_CHAR(date, 'FMMonth DD YYYY'), error_perc as percentage 
+                 FROM errorpercentages
+                 WHERE error_perc > 1
+                 ORDER BY error_perc DESC;
+                 """
+    result = query_database(dbname=dbname, query=third_query)
+    print_third_query(result=result)
+
 def print_third_query(result):
-    pass
+    print_border()
+    print("Days that had more than 1% of requests lead to errors:\n")
+    for (date, percentage) in result:
+        print(str(date) + " -- " + str(percentage) + "% errors")
+    print_border()
+
 
 if __name__ == "__main__":
     DBNAME = "news"
