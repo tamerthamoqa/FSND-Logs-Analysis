@@ -1,20 +1,19 @@
 import psycopg2
 
+
 def first_query(dbname):
     """Queries the PostgreSQL database and answers the following question:
-            'What are the most popular three articles of all time?'
-     """
+            'What are the most popular three articles of all time?'"""
     first_query = """SELECT articles.title, count(*) as views
                      FROM articles, log
                      WHERE log.path = CONCAT('/article/', articles.slug)
                             AND log.status LIKE '%200%'
                      GROUP BY articles.title
                      ORDER BY views DESC
-                     LIMIT 3;
-                  """
-
+                     LIMIT 3;"""
     result = query_database(dbname=dbname, query=first_query)
     print_first_query(result=result)
+
 
 def print_first_query(result):
     """Prints the rows of the first query result."""
@@ -23,6 +22,7 @@ def print_first_query(result):
     for (title, views) in result:
         print("\"" + str(title) + "\"" + " -- " + str(views) + " views")
     print_border()
+
 
 def second_query(dbname):
     """Queries the PostgreSQL database and answers the following question:
@@ -34,10 +34,10 @@ def second_query(dbname):
                             AND log.path = CONCAT('/article/', articles.slug)
                             AND log.status LIKE '%200%'
                       GROUP BY authors.name
-                      ORDER BY views DESC;
-                   """
+                      ORDER BY views DESC;"""
     result = query_database(dbname=dbname, query=second_query)
     print_second_query(result=result)
+
 
 def print_second_query(result):
     """Prints the rows of the second query result."""
@@ -47,6 +47,7 @@ def print_second_query(result):
         print(str(author) + " -- " + str(views) + " views")
     print_border()
 
+
 def third_query(dbname):
     """Queries the PostgreSQL database and answers the following question:
             On which days did more than 1% of requests lead to errors?
@@ -55,27 +56,27 @@ def third_query(dbname):
                      SELECT DATE(time) as date, count(*) as num_total_logs
                      FROM log
                      GROUP BY date
-                  ),                
+                  ),
                  error_logs AS (
                      SELECT DATE(time) as date, count(*) as num_error_logs
                      FROM log
                      WHERE status LIKE'%4%' OR status LIKE'%5%'
-                     GROUP BY date	
-                 ),                
+                     GROUP BY date
+                 ),
                  error_rates AS (
                      SELECT DATE(error_logs.date) as date ,
                      ROUND(((error_logs.num_error_logs::float / total_logs.num_total_logs::float)::numeric * 100), 2)
                            AS error_percentage
                      FROM total_logs, error_logs
                      WHERE total_logs.date = error_logs.date
-                 )                
-                 SELECT TO_CHAR(date, 'FMMonth DD YYYY'), error_percentage as percentage 
+                 )
+                 SELECT TO_CHAR(date, 'FMMonth DD YYYY'), error_percentage
                  FROM error_rates
                  WHERE error_percentage > 1
-                 ORDER BY error_percentage DESC;
-                 """
+                 ORDER BY error_percentage DESC;"""
     result = query_database(dbname=dbname, query=third_query)
     print_third_query(result=result)
+
 
 def print_third_query(result):
     """Prints the rows of the third query result."""
@@ -85,6 +86,7 @@ def print_third_query(result):
         print(str(date) + " -- " + str(percentage) + "% errors")
     print_border()
 
+
 def query_database(dbname, query):
     """Queries a PostgreSQL database and returns a query result.
 
@@ -92,7 +94,8 @@ def query_database(dbname, query):
         dbname (str): the name of the PostgreSQL database
         query (str): the query to be sent to the PostgreSQL database
     Returns:
-          A list of tuples, each tuple is is a row of a query result. An empty list is returned if there is no more
+          A list of tuples, each tuple is is a row of a query result.
+          An empty list is returned if there are no more
           records to fetch.
     """
     try:
@@ -105,6 +108,7 @@ def query_database(dbname, query):
         return result
     except Exception as e:
         print("Connection to database failed!\n"+str(e))
+
 
 def print_border():
     """Prints a border of 50 '-' characters for clearer output. """
