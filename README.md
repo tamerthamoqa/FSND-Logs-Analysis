@@ -21,9 +21,18 @@ The database includes three tables:
 
 # Requirements
 ### Running on the pre-configured virtual machine:
-[Vagrant](https://www.vagrantup.com/) and [Virtualbox](https://www.virtualbox.org/) to be installed.
+Install the following:
+1. [Vagrant](https://www.vagrantup.com/)
+2. [Virtualbox](https://www.virtualbox.org/)
+
+### Running on your PC or desired environment:
+Install the following:
+1. [Python3](https://www.python.org/downloads/)
+2. [psycopg2](https://www.python.org/downloads/) python package
+3. [PostgreSQL](https://www.postgresql.org/download/)
 
 # How to run
+### Running on the pre-configured virtual machine:
 1. Unzip the _newsdata.zip_ file, the uncompressed file is a 120MB SQL file, keep the resulting file in the directory of the project (with Vagrantfile).
 
 2. Open a terminal and cd to the project directory and run the command ```vagrant up```, this will build the virtual machine and may take some time.
@@ -32,8 +41,28 @@ The database includes three tables:
 
 4. Inside the virtual machine cd to the /vagrant/ directory ```cd /vagrant/``` and do the ```ls``` command to make sure the files in the virtual machine exist on the project directory on your actual PC.
 
-5. Run the following command (only works inside the virtual machine):
+5. To load the data to PostgreSQL, run ```psql -d news -f newsdata.sql```
+
+6. Exit from psql by entering ```exit``` or ```Ctrl + D```
+
+7. Run the following command:
 ```python log_analysis.py```
+you should see an output which is the same as the expected output below.
+
+8. Exit from the virtual machine machine by the ```exit``` command.
+
+9. Run the ```vagrant halt``` command to stop the virtual machine.
+
+### Running on your PC or desired environment:
+1. Unzip the _newsdata.zip_ file, the uncompressed file is a 120MB SQL file, keep the resulting file in the directory of the project.
+
+2. Run a terminal and ```cd``` to the project's directory.
+
+3. Load the data to PostgreSQL by running ```psql -d news -f newsdata.sql``` on the terminal.
+
+4. Run the following command:
+```python log_analysis.py```
+see an output which is the same as the expected output below.
 
 # Expected output
 ![Alt text](output_screenshot.PNG "expected output")

@@ -65,7 +65,9 @@ def third_query(dbname):
                  ),
                  error_rates AS (
                      SELECT DATE(error_logs.date) as date ,
-                     ROUND(((error_logs.num_error_logs::float / total_logs.num_total_logs::float)::numeric * 100), 2)
+                     ROUND(
+                     ((error_logs.num_error_logs::float /
+                     total_logs.num_total_logs::float)::numeric * 100), 2)
                            AS error_percentage
                      FROM total_logs, error_logs
                      WHERE total_logs.date = error_logs.date
