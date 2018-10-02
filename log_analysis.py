@@ -2,58 +2,47 @@
 import psycopg2
 
 
-def first_query(dbname):
+def popular_articles(cursor):
     """Queries the PostgreSQL database and answers the following question:
             'What are the most popular three articles of all time?'"""
-    first_query = """SELECT articles.title, count(*) as views
+    query = """SELECT articles.title, count(*) as views
                      FROM articles, log
                      WHERE log.path = CONCAT('/article/', articles.slug)
-                            AND log.status LIKE '%200%'
+                            AND log.status = '200 OK'
                      GROUP BY articles.title
                      ORDER BY views DESC
                      LIMIT 3;"""
-    result = query_database(dbname=dbname, query=first_query)
-    print_first_query(result=result)
+    first_line = "Most popular three articles of all time:\n"
+    template = "\"{}\" -- {} views"
+
+    result = query_database(cursor=cursor, query=query)
+    print_query_results(result=result, template=template,
+                        first_line=first_line)
 
 
-def print_first_query(result):
-    """Prints the rows of the first query result."""
-    print_border()
-    print("Most popular three articles of all time:\n")
-    for (title, views) in result:
-        print("\"" + str(title) + "\"" + " -- " + str(views) + " views")
-    print_border()
-
-
-def second_query(dbname):
+def popular_authors(cursor):
     """Queries the PostgreSQL database and answers the following question:
             'Who are the most popular article authors of all time?'
     """
-    second_query = """SELECT authors.name, count(*) as views
+    query = """SELECT authors.name, count(*) as views
                       FROM authors, articles, log
                       WHERE authors.id = articles.author
                             AND log.path = CONCAT('/article/', articles.slug)
-                            AND log.status LIKE '%200%'
+                            AND log.status = '200 OK'
                       GROUP BY authors.name
                       ORDER BY views DESC;"""
-    result = query_database(dbname=dbname, query=second_query)
-    print_second_query(result=result)
+    template = "{} -- {} views"
+    first_line = "Most popular article authors:\n"
+    result = query_database(cursor=cursor, query=query)
+    print_query_results(result=result, template=template,
+                        first_line=first_line)
 
 
-def print_second_query(result):
-    """Prints the rows of the second query result."""
-    print_border()
-    print("Most popular article authors:\n")
-    for (author, views) in result:
-        print(str(author) + " -- " + str(views) + " views")
-    print_border()
-
-
-def third_query(dbname):
+def error_days(cursor):
     """Queries the PostgreSQL database and answers the following question:
-            On which days did more than 1% of requests lead to errors?
+            'On which days did more than 1% of requests lead to errors?'
     """
-    third_query = """WITH total_logs AS (
+    query = """WITH total_logs AS (
                      SELECT DATE(time) as date, count(*) as num_total_logs
                      FROM log
                      GROUP BY date
@@ -61,7 +50,7 @@ def third_query(dbname):
                  error_logs AS (
                      SELECT DATE(time) as date, count(*) as num_error_logs
                      FROM log
-                     WHERE status LIKE'%4%' OR status LIKE'%5%'
+                     WHERE status >= '400'
                      GROUP BY date
                  ),
                  error_rates AS (
@@ -77,48 +66,90 @@ def third_query(dbname):
                  FROM error_rates
                  WHERE error_percentage > 1
                  ORDER BY error_percentage DESC;"""
-    result = query_database(dbname=dbname, query=third_query)
-    print_third_query(result=result)
+    template = "{} -- {}% errors"
+    first_line = "Days that had more than 1% of requests lead to errors:\n"
+    result = query_database(cursor=cursor, query=query)
+    print_query_results(result=result, template=template,
+                        first_line=first_line)
 
 
-def print_third_query(result):
-    """Prints the rows of the third query result."""
-    print_border()
-    print("Days that had more than 1% of requests lead to errors:\n")
-    for (date, percentage) in result:
-        print(str(date) + " -- " + str(percentage) + "% errors")
-    print_border()
+def connect_database(dbname):
+    """Opens a conncetion to a PostgreSQL database.
+
+    Args:
+        dbname(str): the name of the PostgreSQL database.
+
+    Returns:
+        connection object.
+        cursor object.
+    """
+    try:
+        connection = psycopg2.connect("dbname={}".format(dbname))
+        cursor = connection.cursor()
+        return connection, cursor
+    except Exception as e:
+        print("Connection to database failed!\n" + str(e))
 
 
-def query_database(dbname, query):
+def query_database(cursor, query):
     """Queries a PostgreSQL database and returns a query result.
 
     Args:
-        dbname (str): the name of the PostgreSQL database
-        query (str): the query to be sent to the PostgreSQL database
+        cursor : cursor object of an open PostgreSQL database connection.
+        query (str): the query to be sent to the PostgreSQL database.
+
     Returns:
-          A list of tuples, each tuple is is a row of a query result.
-          An empty list is returned if there are no more
-          records to fetch.
+        result: A list of tuples, each tuple is is a row of a query result.
+        An empty list is returned if there are no more
+        records to fetch.
     """
     try:
-        conn = psycopg2.connect("dbname={}".format(dbname))
-        cur = conn.cursor()
-        cur.execute(query)
-        result = cur.fetchall()
-        cur.close()
-        conn.close()
+        cursor.execute(query)
+        result = cursor.fetchall()
         return result
     except Exception as e:
-        print("Connection to database failed!\n"+str(e))
+        print(str(e))
+
+
+def close_database(cursor, connection):
+    """Closes an open connection to a PostgreSQL database.
+
+    Args:
+        cursor object.
+        connection object.
+    """
+    try:
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(str(e))
+
+
+def print_query_results(result, template, first_line):
+    """Prints the results of a query according to a specified str template.
+
+    Args:
+        result: list of tuples from the result of a query database.
+        template (str): str template for result to printed as.
+        first_line (str): first line that will be printed, used to differentiate
+                          between different query outputs.
+    """
+    print_border()
+    print(first_line)
+    for row in result:
+        print template.format(*row)
+    print_border()
 
 
 def print_border():
     """Prints a border of 50 '-' characters for clearer output. """
     print("-" * 50)
 
+
 if __name__ == "__main__":
     DBNAME = "news"
-    first_query(dbname=DBNAME)
-    second_query(dbname=DBNAME)
-    third_query(dbname=DBNAME)
+    connection, cursor = connect_database(dbname=DBNAME)
+    popular_articles(cursor)
+    popular_authors(cursor)
+    error_days(cursor)
+    close_database(connection=connection, cursor=cursor)
