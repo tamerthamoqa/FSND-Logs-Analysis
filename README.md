@@ -62,7 +62,7 @@ you should see an output which is the same as the expected output below.
 
 4. Run the following command:
 ```python log_analysis.py```
-see an output which is the same as the expected output below.
+to see an output which is the same as the expected output below.
 
 # Expected output
 ![Alt text](output_screenshot.PNG "expected output")
