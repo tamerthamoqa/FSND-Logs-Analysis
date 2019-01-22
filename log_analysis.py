@@ -4,7 +4,8 @@ import psycopg2
 
 def popular_articles(cursor):
     """Queries the PostgreSQL database and answers the following question:
-            'What are the most popular three articles of all time?'"""
+            'What are the most popular three articles of all time?'
+    """
     query = """SELECT articles.title, count(*) as views
                      FROM articles, log
                      WHERE log.path = CONCAT('/article/', articles.slug)
