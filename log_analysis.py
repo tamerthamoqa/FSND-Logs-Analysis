@@ -7,12 +7,12 @@ def popular_articles(cursor):
             'What are the most popular three articles of all time?'
     """
     query = """SELECT articles.title, count(*) as views
-                     FROM articles, log
-                     WHERE log.path = CONCAT('/article/', articles.slug)
-                            AND log.status = '200 OK'
-                     GROUP BY articles.title
-                     ORDER BY views DESC
-                     LIMIT 3;"""
+                         FROM articles, log
+                         WHERE log.status = '200 OK'
+                               AND log.path = CONCAT('/article/', articles.slug)
+                         GROUP BY articles.title
+                         ORDER BY views DESC
+                         LIMIT 3;"""
     first_line = "Most popular three articles of all time:\n"
     template = "\"{}\" -- {} views"
 
@@ -26,12 +26,12 @@ def popular_authors(cursor):
             'Who are the most popular article authors of all time?'
     """
     query = """SELECT authors.name, count(*) as views
-                      FROM authors, articles, log
-                      WHERE authors.id = articles.author
-                            AND log.path = CONCAT('/article/', articles.slug)
-                            AND log.status = '200 OK'
-                      GROUP BY authors.name
-                      ORDER BY views DESC;"""
+                          FROM authors, articles, log
+                          WHERE log.status = '200 OK'                       
+                                AND log.path = CONCAT('/article/', articles.slug)
+                                AND authors.id = articles.author
+                          GROUP BY authors.name
+                          ORDER BY views DESC;"""
     template = "{} -- {} views"
     first_line = "Most popular article authors:\n"
     result = query_database(cursor=cursor, query=query)
